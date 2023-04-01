@@ -121,7 +121,7 @@ def order_get_byid(id):
 		return "Order not found", 404
 
 @app.route('/order', methods = ['POST'])
-# @jwt_required()
+@jwt_required()
 def order_post():
 		idUser = request.json.get('idUser', None)
 		idStatus = request.json.get('idStatus', None)
@@ -197,13 +197,13 @@ def register():
 				return 'Missing phone', 400
 		
 		hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-		post_user(firstName, secondName, email, hashed, phone, role)
+		userId = post_user(firstName, secondName, email, hashed, phone, role)
 
 		if(role=="admin"):
 			access_token = create_access_token("admin_user", additional_claims={"is_administrator": True})
 		else:
 			access_token = create_access_token("common_user", additional_claims={"is_user": True})
-		return {"access_token": access_token}, 200
+		return {"access_token": access_token, "userId": userId}, 200
 	except IntegrityError:
 		session.rollback()
 		return 'User Already Exists', 400
@@ -229,7 +229,7 @@ def login():
 					access_token = create_access_token("admin_user", additional_claims={"is_administrator": True})
 				else:
 					access_token = create_access_token("common_user", additional_claims={"is_user": True})
-				return {"access_token": access_token}, 200
+				return {"access_token": access_token, "userId": user.idUser}, 200
 		else:
 				return 'Invalid Login Info!', 400
 	except AttributeError:

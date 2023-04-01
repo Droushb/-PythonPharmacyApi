@@ -152,7 +152,7 @@ def post_user(firstName, lastName, email, password, phone, role):
     Email=email, Password=password, Phone=phone, Role=role)
     session.add(addeduser)
     session.commit()
-    return 'Added a User with id %s' % addeduser.idUser + get_user_byEmail(email)
+    return addeduser.idUser
 
 def update_user(firstName, lastName, email, password, phone):
     updatedUser = session.query(User).filter_by(Email = email).first()
