@@ -1,26 +1,25 @@
 import json
-from sqlite3 import Date
-from flask import Flask, jsonify
-from sqlalchemy import select
+from sqlalchemy import BLOB, select
 from main import User, Status, Drug, Order, OrderDetails
 from models import session
-import sqlalchemy
 
 #drugs
 def get_drugs():
     AllDrugs = session.execute(select(Drug))
     drugs = AllDrugs.scalars().all()
-    result = ""
+    result = []
     for drug in drugs:
         status = session.query(Status).filter_by(idStatus = drug.idStatus).one()
         drugJSON = {
             "Id": drug.idDrug,
             "Name": drug.Name,
+            "Description": drug.Description,
+            "Image": drug.Image,
             "Price": drug.Price,
             "Status": status.Name
         }
-        result+= json.dumps(drugJSON)
-    return result
+        result.append(drugJSON)
+    return json.dumps(result)
 
 
 def get_drug_byid(id):
@@ -29,28 +28,34 @@ def get_drug_byid(id):
     drugJSON = {
         "Id": drug.idDrug,
         "Name": drug.Name,
+        "Description": drug.Description,
+        "Image": drug.Image,
         "Price": drug.Price,
         "Status": status.Name
     }
     return json.dumps(drugJSON)
 
-def post_drug(Name, Price, idStatus):
-    addeddrug = Drug(Name=Name, Price=Price, idStatus=idStatus)
+def post_drug(name, description, image, price, idStatus):
+    addeddrug = Drug(Name=name, Description=description, Image=image, Price=price, idStatus=idStatus)
     session.add(addeddrug)
     session.commit()
     return 'Added a Drug with id %s' % addeddrug.idDrug + get_drug_byid(addeddrug.idDrug)
 
-def update_drug(id, name, price, idStatus):
-   updatedDrug = session.query(Drug).filter_by(idDrug = id).one()
-   if name!='':
+def update_drug(id, name, description, image, price, idStatus):
+    updatedDrug = session.query(Drug).filter_by(idDrug = id).one()
+    if name!='':
        updatedDrug.Name = name
-   if price!='':
+    if description!='':
+        updatedDrug.Description = description
+    if image!='':
+        updatedDrug.Image = image
+    if price!='':
        updatedDrug.Price = price
-   if idStatus!='':
+    if idStatus!='':
        updatedDrug.idStatus = idStatus
-   session.add(updatedDrug)
-   session.commit()
-   return 'Updated a Drug with id %s' % id + get_drug_byid(id)
+    session.add(updatedDrug)
+    session.commit()
+    return 'Updated a Drug with id %s' % id + get_drug_byid(id)
 
 def delete_drug(id):
     drugToDelete = session.query(Drug).filter_by(idDrug = id).one()
@@ -98,6 +103,7 @@ def get_order_byid(id):
 def post_order(idUser, idStatus, items):
     addedorder = Order(idUser=idUser, idStatus=idStatus)
     session.add(addedorder)
+    session.commit()
     id = addedorder.idOrder
     for item in items:
         addedorderdetails = OrderDetails(idOrder=id, idDrug=item['idDrug'], quantity=item['quantity'])
@@ -134,7 +140,7 @@ def get_user_byEmail(email):
         "Id": userOne.Email,
         "Email": userOne.Email,
         "First Name": userOne.FirstName,
-        "Second Name": userOne.LastName,
+        "Last Name": userOne.LastName,
         "Password": userOne.Password,
         "Phone": userOne.Phone,
         "Role": userOne.Role
@@ -154,8 +160,6 @@ def update_user(firstName, lastName, email, password, phone):
         updatedUser.FirstName = firstName
     if lastName!='':
         updatedUser.LastName = lastName
-    if email!='':
-        updatedUser.Email = email
     if password!='':
         updatedUser.Password = password
     if phone!='':

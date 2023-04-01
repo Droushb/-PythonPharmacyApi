@@ -49,7 +49,6 @@ def admin_required():
 
 #DRUGS
 @app.route('/drugs', methods = ['GET'])
-@jwt_required()
 def drugs_get():
 	try:
 		return get_drugs()
@@ -57,7 +56,6 @@ def drugs_get():
 		return "Drugs not found", 404
 
 @app.route('/drug/<id>', methods = ['GET'])
-@jwt_required()
 def drug_get_byid(id):
 	try:
 		return get_drug_byid(id)
@@ -68,29 +66,34 @@ def drug_get_byid(id):
 @admin_required()
 def drug_post():
 	try:
-		id = request.json.get('id', None)
 		name = request.json.get('name', None)
 		price = request.json.get('price', None)
+		description = request.json.get('description', None)
+		image = request.json.get('image', None)
 		idStatus = request.json.get('idStatus', None)
-		if id=='':
-			return 'Missing id', 400
 		if name=='':
 			return 'Missing name', 400
+		if description=='':
+			return 'Missing description', 400
+		if image=='':
+			return 'Missing image', 400
 		if price=='':
 			return 'Missing price', 400
 		if idStatus=='':
 			return 'Missing idStatus', 400
-		return post_drug(id, name, price, idStatus)
+		return post_drug(name, description, image, price, idStatus,)
 	except IntegrityError:
 		return 'Drug Already Exists', 400
 
 @app.route('/drug/<id>', methods = ['PUT'])
 @admin_required()
 def drug_update(id):
-	name = request.args.get('name', '')
-	price = request.args.get('price', '')
-	idStatus = request.args.get('idStatus', '')
-	return update_drug(id, name, price, idStatus)
+	name = request.json.get('name', '')
+	price = request.json.get('price', '')
+	description = request.json.get('description', '')
+	image = request.json.get('image', '')
+	idStatus = request.json.get('idStatus', '')
+	return update_drug(id, name, description, image, price, idStatus)
 
 @app.route('/drug/<id>', methods = ['DELETE'])
 @admin_required()
@@ -118,9 +121,8 @@ def order_get_byid(id):
 		return "Order not found", 404
 
 @app.route('/order', methods = ['POST'])
-@jwt_required()
+# @jwt_required()
 def order_post():
-		id = request.json.get('Id', None)
 		idUser = request.json.get('idUser', None)
 		idStatus = request.json.get('idStatus', None)
 		items = request.json.get('items', None)
@@ -128,7 +130,7 @@ def order_post():
 			return 'Missing idUser', 400
 		if idStatus=='':
 			return 'Missing idStatus', 400
-		return post_order(id, idUser, idStatus, items)
+		return post_order(idUser, idStatus, items)
 
 @app.route('/order/<id>', methods = ['DELETE'])
 @jwt_required()
@@ -148,14 +150,15 @@ def status_get():
 		return "Statuses not found", 404
 
 #USER
-@app.route('/user/<Email>', methods = ['GET'])
+@app.route('/user/<email>', methods = ['GET'])
+@jwt_required()
 def user_get_byid(email):
 	try:
 		return get_user_byEmail(email)
 	except NoResultFound:
 		return "User not found", 404
 
-@app.route('/user/<Email>', methods = ['PUT'])
+@app.route('/user/<email>', methods = ['PUT'])
 @jwt_required()
 def user_update(email):
 	firstName = request.args.get('firstName', '')
@@ -164,7 +167,7 @@ def user_update(email):
 	phone = request.args.get('phone', '')
 	return update_user(firstName, lastName, email, password, phone)
 
-@app.route('/user/<Email>', methods = ['DELETE'])
+@app.route('/user/<email>', methods = ['DELETE'])
 @admin_required()
 def user_delete(email):
 	try:
@@ -175,7 +178,6 @@ def user_delete(email):
 @app.route('/register', methods=['POST'])
 def register():
 	try:
-		id = request.json.get('id', None)
 		firstName = request.json.get('firstName', None)
 		secondName = request.json.get('secondName', None)
 		email = request.json.get('email', None)
@@ -195,7 +197,7 @@ def register():
 				return 'Missing phone', 400
 		
 		hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-		post_user(id, firstName, secondName, email, hashed, phone, role)
+		post_user(firstName, secondName, email, hashed, phone, role)
 
 		if(role=="admin"):
 			access_token = create_access_token("admin_user", additional_claims={"is_administrator": True})

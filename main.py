@@ -1,6 +1,6 @@
 from xmlrpc.client import DateTime
 import mysql.connector
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, BIGINT, ForeignKey
+from sqlalchemy import TEXT, LargeBinary, create_engine, Column, String, Integer, DateTime, BIGINT, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session, relationship
 
 
@@ -39,7 +39,9 @@ class Drug(Base):
 
     idDrug = Column(Integer, primary_key=True, autoincrement=True)
     Name = Column(String(45), nullable=False)
+    Description = Column(String(1000))
     Price =  Column(Integer, nullable=False)
+    Image = Column(String(1000), nullable=False)
     idStatus = Column(Integer, ForeignKey(Status.idStatus))
     Status = relationship(Status, backref='Drug', lazy="joined")
 
